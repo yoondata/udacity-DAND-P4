@@ -1,0 +1,545 @@
+
+
+### Preliminaries
+```{r}
+# Load packages
+library(dplyr)
+
+# Load data
+setwd("./scorecard_clean")
+scorecard1 <- read.csv("Most+Recent+Cohorts+(Scorecard+Elements).csv")
+scorecard2 <- read.csv("Most+Recent+Cohorts+(Treasury+Elements).csv")
+```
+
+
+### Selecting variables of interest
+```{r}
+# Select variables of interest (1)
+scorecard1 <- scorecard1 %>%
+  select(
+            # Basic Info
+            UNITID, INSTNM, CITY, 
+            STABBR, LOCALE, CONTROL, 
+            PREDDEG, CURROPER,
+            
+            # Affiliation
+            MENONLY, WOMENONLY, RELAFFIL,
+            
+            # Demographics
+            UGDS, UGDS_WHITE, UGDS_BLACK, 
+            UGDS_HISP, UGDS_ASIAN, UGDS_AIAN, 
+            UGDS_NHPI, UGDS_2MOR, UGDS_NRA, 
+            UGDS_UNKN,
+            
+            # Scholarly Aspects
+            SATVRMID, SATMTMID, RET_FT4, 
+            RET_FTL4, RET_PT4, RET_PTL4,
+            
+            # Cost of Attendance
+            NPT4_PUB, NPT4_PRIV, NPT41_PUB, 
+            NPT42_PUB, NPT43_PUB, NPT44_PUB, 
+            NPT45_PUB, NPT41_PRIV, NPT42_PRIV, 
+            NPT43_PRIV, NPT44_PRIV, NPT45_PRIV, 
+            PCTPELL, PCTFLOAN, GRAD_DEBT_MDN_SUPP
+        )
+
+# Select variables of interest (2)
+scorecard2 <- scorecard2 %>%
+  select(
+            # Basic Info
+            UNITID, 
+            
+            # Demographics
+            age_entry, agege24, female, 
+            married, dependent, veteran, 
+            first_gen, 
+            
+            # Student Finance
+            loan_ever, pell_ever, faminc, 
+            md_faminc, 
+            
+            # Postgraduate Success
+            gt_25k_p10, mn_earn_wne_p10, 
+            md_earn_wne_p10, sd_earn_wne_p10, 
+            mn_earn_wne_male0_p10, mn_earn_wne_male1_p10
+        )
+```
+
+
+### Merging tables
+```{r}
+# Merge two tables
+scorecard <- merge(scorecard1, scorecard2, by = "UNITID")
+
+# Convert data.frame into tbl
+scorecard <- tbl_df(scorecard)
+```
+
+
+### Auditing data
+```{r}
+
+
+var_audit <- function(var_name) {
+  
+  var_vector <- scorecard[[var_name]]
+  
+  var_class <- class(var_vector)
+  num_unique <- length(unique(var_vector))
+  num_na <- sum(var_vector %in% c("NULL", "PrivacySuppressed"))
+  elem_ex <- unique(var_vector)[sample(1:length(unique(var_vector)), 1)]
+  elem_ex <- as.character(elem_ex)  # To prevent unhelpful implicit coercion
+  
+  result <- list("var_class" = var_class, "num_unique" = num_unique, 
+                 "num_na" = num_na, "elem_ex" = elem_ex)
+  
+  return(result)
+  
+}
+
+
+audit_tbl <- function(data) {
+  
+  var_name <- c()
+  var_class <- c()
+  num_unique <- c()
+  num_na <- c()
+  elem_ex <- c()
+  
+  for(col_nm in names(data)) {
+    var_name <- append(var_name, col_nm)
+    var_class <- append(var_class, var_audit(col_nm)[["var_class"]])
+    num_unique <- append(num_unique, var_audit(col_nm)[["num_unique"]])
+    num_na <- append(num_na, var_audit(col_nm)[["num_na"]])
+    elem_ex <- append(elem_ex, var_audit(col_nm)[["elem_ex"]])
+  }
+  
+  table <- data.frame(var_name, var_class, num_unique, num_na, elem_ex)
+  names(table) <- c("var_name", "var_class", "num_unique", "num_na", "elem_ex")
+  
+  return(table)
+  
+}
+
+
+audit_tbl <- audit_tbl(scorecard)
+write.csv(audit_tbl, file = "audit_tbl.csv", row.names = FALSE)  # Save for later reference
+```
+
+
+### Standardizing NA values
+```{r}
+for(col_nm in names(scorecard)) {
+  scorecard[[col_nm]][scorecard[[col_nm]] %in% c("NULL", "PrivacySuppressed")] <- NA
+}
+```
+
+
+### Writing a function for renaming values/levels in each variable
+```{r}
+rename_val <- function(var_vector, rule_lst) {
+  var_vector <- as.character(var_vector)
+  for(key in names(rule_lst)) {
+    var_vector[var_vector %in% rule_lst[[key]]] <- key
+  }
+  var_vector <- factor(var_vector, levels = names(rule_lst))
+  return(var_vector)
+}
+```
+
+
+### Renaming values/levels in LOCALE
+```{r}
+lst_locale <- list(
+  "city" = c("11", "12", "13"),
+  "suburb" = c("21", "22", "23"),
+  "town" = c("31", "32", "33"),
+  "rural" = c("41", "42", "43")
+)
+
+scorecard$LOCALE <- rename_val(scorecard$LOCALE, lst_locale)
+```
+
+
+### Renaming values/levels in CONTROL
+```{r}
+lst_control <- list(
+  "public" = 1,
+  "private_nonprofit" = 2,
+  "private_for-profit" = 3
+)
+
+scorecard$CONTROL <- rename_val(scorecard$CONTROL, lst_control)
+```
+
+
+### Renaming values/levels in PREDDEG
+```{r}
+lst_degree <- list(
+  "unclassified" = 0,
+  "certificate" = 1,
+  "associate" = 2,
+  "bachelor" = 3,
+  "graduate" = 4
+)
+
+scorecard$PREDDEG <- rename_val(scorecard$PREDDEG, lst_degree)
+scorecard$PREDDEG <- as.character(scorecard$PREDDEG)
+scorecard$PREDDEG[scorecard$PREDDEG == "unclassified"] <- NA
+scorecard$PREDDEG <- factor(scorecard$PREDDEG, levels = c("certificate", "associate", "bachelor", "graduate"))
+```
+
+
+### Renaming values/levels in CURROPER
+```{r}
+lst_operation <- list(
+  "closed" = 0,
+  "operating" = 1
+)
+
+scorecard$CURROPER <- rename_val(scorecard$CURROPER, lst_operation)
+```
+
+
+### Merging "MENONLY" and "WOMENONLY" columns
+```{r}
+scorecard$gender_affil <- "coed"
+scorecard[is.na(scorecard$MENONLY),]$gender_affil <- NA
+scorecard[!is.na(scorecard$MENONLY) & scorecard$MENONLY == "1",]$gender_affil <- "men_only"
+scorecard[!is.na(scorecard$MENONLY) & scorecard$WOMENONLY == "1",]$gender_affil <- "women_only"
+scorecard$gender_affil <- factor(scorecard$gender_affil, levels = c("coed", "men_only", "women_only"))
+
+# Drop "MENONLY" and "WOMENONLY" columns
+scorecard <- scorecard[, !(names(scorecard) %in% c("MENONLY", "WOMENONLY"))]
+```
+
+
+### Renaming values/levels in RELAFFIL
+```{r}
+lst_religious_affil <- list(
+  "Protestant" = c("22", "24", "27", "28", "33", "34", "35", "36", "37", "38", 
+                   "39", "40", "41", "43", "44", "45", "47", "48", "49", "50", 
+                   "51", "52", "53", "54", "55", "57", "58", "59", "60", "61", 
+                   "64", "65", "66", "67", "68", "69", "71", "73", "74", "75", 
+                   "76", "77", "78", "79", "81", "84", "87", "89", "93", "94", 
+                   "95", "97", "100", "101", "102", "103"),
+  "Catholic" = c("30"),
+  "Jewish" = c("80"),
+  "Eastern Orthodox" = c("91", "92"),
+  "Interdenominational" = c("42"),
+  "Undenominational" = c("88"),
+  "Other" = c("99")
+)
+
+# Code "Not reported" and "Not applicable" as NA
+scorecard$RELAFFIL[scorecard$RELAFFIL %in% c("-1", "-2")] <- NA
+
+# Rename other values/levels
+scorecard$RELAFFIL <- rename_val(scorecard$RELAFFIL, lst_religious_affil)
+```
+
+
+### Converting UGDS-related variables to numeric
+```{r}
+# Define a function to simplify the process
+fct_to_num <- function(vector_in) {
+  vector_out <- as.character(vector_in)
+  vector_out <- as.numeric(vector_out)
+  return(vector_out)
+}
+
+# Convert the type
+scorecard$UGDS <- sapply(scorecard$UGDS, fct_to_num)
+scorecard$UGDS_WHITE <- sapply(scorecard$UGDS_WHITE, fct_to_num)
+scorecard$UGDS_BLACK <- sapply(scorecard$UGDS_BLACK, fct_to_num)
+scorecard$UGDS_HISP <- sapply(scorecard$UGDS_HISP, fct_to_num)
+scorecard$UGDS_ASIAN <- sapply(scorecard$UGDS_ASIAN, fct_to_num)
+scorecard$UGDS_AIAN <- sapply(scorecard$UGDS_AIAN, fct_to_num)
+scorecard$UGDS_NHPI <- sapply(scorecard$UGDS_NHPI, fct_to_num)
+scorecard$UGDS_2MOR <- sapply(scorecard$UGDS_2MOR, fct_to_num)
+scorecard$UGDS_NRA <- sapply(scorecard$UGDS_NRA, fct_to_num)
+scorecard$UGDS_UNKN <- sapply(scorecard$UGDS_UNKN, fct_to_num)
+```
+
+
+### Converting SAT-related variables to numeric
+```{r}
+scorecard$SATVRMID <- sapply(scorecard$SATVRMID, fct_to_num)
+scorecard$SATMTMID <- sapply(scorecard$SATMTMID, fct_to_num)
+```
+
+
+### Reorganizing retention-related columns
+```{r}
+# Convert variables to numeric
+scorecard$RET_FT4 <- sapply(scorecard$RET_FT4, fct_to_num)
+scorecard$RET_FTL4 <- sapply(scorecard$RET_FTL4, fct_to_num)
+scorecard$RET_PT4 <- sapply(scorecard$RET_PT4, fct_to_num)
+scorecard$RET_PTL4 <- sapply(scorecard$RET_PTL4, fct_to_num)
+
+# Merging non-overlapping related columns (1)
+scorecard$retention_FT <- -1
+scorecard$retention_FT[!is.na(scorecard$RET_FT4)] <- scorecard$RET_FT4[!is.na(scorecard$RET_FT4)]
+scorecard$retention_FT[!is.na(scorecard$RET_FTL4)] <- scorecard$RET_FTL4[!is.na(scorecard$RET_FTL4)]
+scorecard$retention_FT[scorecard$retention_FT == -1] <- NA
+
+# Merging non-overlapping related columns (2)
+scorecard$retention_PT <- -1
+scorecard$retention_PT[!is.na(scorecard$RET_PT4)] <- scorecard$RET_PT4[!is.na(scorecard$RET_PT4)]
+scorecard$retention_PT[!is.na(scorecard$RET_PTL4)] <- scorecard$RET_PTL4[!is.na(scorecard$RET_PTL4)]
+scorecard$retention_PT[scorecard$retention_PT == -1] <- NA
+
+# Drop old variables
+scorecard <- scorecard[, !(names(scorecard) %in% c("RET_FT4", "RET_FTL4", "RET_PT4", "RET_PTL4"))]
+```
+
+
+### Reorganizing cost-related columns
+```{r}
+# Convert variables to numeric
+scorecard$NPT4_PUB <- sapply(scorecard$NPT4_PUB, fct_to_num)
+scorecard$NPT4_PRIV <- sapply(scorecard$NPT4_PRIV, fct_to_num)
+scorecard$NPT41_PUB <- sapply(scorecard$NPT41_PUB, fct_to_num)
+scorecard$NPT41_PRIV <- sapply(scorecard$NPT41_PRIV, fct_to_num)
+scorecard$NPT42_PUB <- sapply(scorecard$NPT42_PUB, fct_to_num)
+scorecard$NPT42_PRIV <- sapply(scorecard$NPT42_PRIV, fct_to_num)
+scorecard$NPT43_PUB <- sapply(scorecard$NPT43_PUB, fct_to_num)
+scorecard$NPT43_PRIV <- sapply(scorecard$NPT43_PRIV, fct_to_num)
+scorecard$NPT44_PUB <- sapply(scorecard$NPT44_PUB, fct_to_num)
+scorecard$NPT44_PRIV <- sapply(scorecard$NPT44_PRIV, fct_to_num)
+scorecard$NPT45_PUB <- sapply(scorecard$NPT45_PUB, fct_to_num)
+scorecard$NPT45_PRIV <- sapply(scorecard$NPT45_PRIV, fct_to_num)
+
+# Merging non-overlapping related columns (1)
+scorecard$avg_net_cost <- -1
+scorecard$avg_net_cost[!is.na(scorecard$NPT4_PUB)] <- scorecard$NPT4_PUB[!is.na(scorecard$NPT4_PUB)]
+scorecard$avg_net_cost[!is.na(scorecard$NPT4_PRIV)] <- scorecard$NPT4_PRIV[!is.na(scorecard$NPT4_PRIV)]
+scorecard$avg_net_cost[scorecard$avg_net_cost == -1] <- NA
+
+# Merging non-overlapping related columns (2)
+scorecard$cost_income1 <- -1
+scorecard$cost_income1[!is.na(scorecard$NPT41_PUB)] <- scorecard$NPT41_PUB[!is.na(scorecard$NPT41_PUB)]
+scorecard$cost_income1[!is.na(scorecard$NPT41_PRIV)] <- scorecard$NPT41_PRIV[!is.na(scorecard$NPT41_PRIV)]
+scorecard$cost_income1[scorecard$avg_net_cost == -1] <- NA
+
+# Merging non-overlapping related columns (3)
+scorecard$cost_income2 <- -1
+scorecard$cost_income2[!is.na(scorecard$NPT42_PUB)] <- scorecard$NPT42_PUB[!is.na(scorecard$NPT42_PUB)]
+scorecard$cost_income2[!is.na(scorecard$NPT42_PRIV)] <- scorecard$NPT42_PRIV[!is.na(scorecard$NPT42_PRIV)]
+scorecard$cost_income2[scorecard$avg_net_cost == -1] <- NA
+
+# Merging non-overlapping related columns (4)
+scorecard$cost_income3 <- -1
+scorecard$cost_income3[!is.na(scorecard$NPT43_PUB)] <- scorecard$NPT43_PUB[!is.na(scorecard$NPT43_PUB)]
+scorecard$cost_income3[!is.na(scorecard$NPT43_PRIV)] <- scorecard$NPT43_PRIV[!is.na(scorecard$NPT43_PRIV)]
+scorecard$cost_income3[scorecard$avg_net_cost == -1] <- NA
+
+# Merging non-overlapping related columns (5)
+scorecard$cost_income4 <- -1
+scorecard$cost_income4[!is.na(scorecard$NPT44_PUB)] <- scorecard$NPT44_PUB[!is.na(scorecard$NPT44_PUB)]
+scorecard$cost_income4[!is.na(scorecard$NPT44_PRIV)] <- scorecard$NPT44_PRIV[!is.na(scorecard$NPT44_PRIV)]
+scorecard$cost_income4[scorecard$avg_net_cost == -1] <- NA
+
+# Merging non-overlapping related columns (6)
+scorecard$cost_income5 <- -1
+scorecard$cost_income5[!is.na(scorecard$NPT45_PUB)] <- scorecard$NPT45_PUB[!is.na(scorecard$NPT45_PUB)]
+scorecard$cost_income5[!is.na(scorecard$NPT45_PRIV)] <- scorecard$NPT45_PRIV[!is.na(scorecard$NPT45_PRIV)]
+scorecard$cost_income5[scorecard$avg_net_cost == -1] <- NA
+
+# Drop old variables
+scorecard <- scorecard[, !(names(scorecard) %in% c("NPT4_PUB", "NPT4_PRIV", "NPT41_PUB", "NPT41_PRIV", 
+                                                   "NPT42_PUB", "NPT42_PRIV", "NPT43_PUB", "NPT43_PRIV", 
+                                                   "NPT44_PUB", "NPT44_PRIV", "NPT45_PUB", "NPT45_PRIV"))]
+```
+
+
+### Converting PCTPELL to proportion
+```{r}
+## Convert percentage to proportion
+## Variable to be renamed later
+scorecard$PCTPELL <- sapply(scorecard$PCTPELL, fct_to_num)
+scorecard$PCTPELL <- (scorecard$PCTPELL / 100)
+```
+
+
+### Converting PCTFLOAN to proportion
+```{r}
+## Convert percentage to proportion
+## Variable to be renamed later
+scorecard$PCTFLOAN <- sapply(scorecard$PCTFLOAN, fct_to_num)
+scorecard$PCTFLOAN <- (scorecard$PCTFLOAN / 100)
+```
+
+
+### Converting PCTFLOAN to proportion
+```{r}
+## Convert percentage to proportion
+scorecard$agege24 <- sapply(scorecard$agege24, fct_to_num)
+scorecard$agege24 <- (scorecard$agege24 / 100)
+```
+
+
+### Converting other variables to numeric
+```{r}
+scorecard$age_entry <- sapply(scorecard$age_entry, fct_to_num)
+scorecard$female <- sapply(scorecard$female, fct_to_num)
+scorecard$married <- sapply(scorecard$married, fct_to_num)
+scorecard$dependent <- sapply(scorecard$dependent, fct_to_num)
+scorecard$veteran <- sapply(scorecard$veteran, fct_to_num)
+scorecard$first_gen <- sapply(scorecard$first_gen, fct_to_num)
+scorecard$loan_ever <- sapply(scorecard$loan_ever, fct_to_num)
+scorecard$pell_ever <- sapply(scorecard$pell_ever, fct_to_num)
+scorecard$faminc <- sapply(scorecard$faminc, fct_to_num)
+scorecard$md_faminc <- sapply(scorecard$md_faminc, fct_to_num)
+scorecard$gt_25k_p10 <- sapply(scorecard$gt_25k_p10, fct_to_num)
+scorecard$mn_earn_wne_p10 <- sapply(scorecard$mn_earn_wne_p10, fct_to_num)
+scorecard$md_earn_wne_p10 <- sapply(scorecard$md_earn_wne_p10, fct_to_num)
+scorecard$sd_earn_wne_p10 <- sapply(scorecard$sd_earn_wne_p10, fct_to_num)
+scorecard$mn_earn_wne_male0_p10 <- sapply(scorecard$mn_earn_wne_male0_p10, fct_to_num)
+scorecard$mn_earn_wne_male1_p10 <- sapply(scorecard$mn_earn_wne_male1_p10, fct_to_num)
+```
+
+
+### Adjusting decimal places for variables expressing proportion
+```{r}
+## Write a function that adjusts decimal places
+## Source: http://stackoverflow.com/questions/3443687/formatting-decimal-places-in-r
+decimal_four <- function(num_in) {
+  num_out <- format(round(num_in, 4), nsmall = 4)
+  return(num_out)
+}
+
+# List variables that express proportion
+var_prop <- c("UGDS_WHITE", "UGDS_BLACK", "UGDS_HISP", "UGDS_ASIAN", "UGDS_AIAN", 
+              "UGDS_NHPI", "UGDS_2MOR", "UGDS_NRA", "UGDS_UNKN", "PCTPELL", "PCTFLOAN", 
+              "agege24", "female", "married", "dependent", "veteran", "first_gen", 
+              "loan_ever", "pell_ever", "gt_25k_p10")
+
+# Adjust decimal places
+for(var in var_prop) {
+  scorecard[[var]] <- sapply(scorecard[[var]], decimal_four)
+}
+```
+
+
+### Renaming variables
+```{r}
+names(scorecard) <- c(
+  "id", 
+  "inst_name", 
+  "city", 
+  "state", 
+  "locale", 
+  "control", 
+  "degree", 
+  "operation", 
+  "religious_affil", 
+  "num_UGDS", 
+  "UGDS_white", 
+  "UGDS_black", 
+  "UGDS_hispanic", 
+  "UGDS_asian", 
+  "UGDS_AIAN", 
+  "UGDS_NHPI", 
+  "UGDS_multi", 
+  "UGDS_foreign", 
+  "UGDS_NA", 
+  "SAT_CR_mid", 
+  "SAT_MT_mid", 
+  "Pell_prop", 
+  "fed_loan_prop", 
+  "grad_debt_median", 
+  "avg_age_entry", 
+  "age_GT23_prop", 
+  "female_prop", 
+  "married_prop", 
+  "dependent_prop", 
+  "veteran_prop", 
+  "first_gen_prop", 
+  "fed_loan_ever_prop", 
+  "Pell_ever_prop", 
+  "fam_income_mean", 
+  "fam_income_median", 
+  "GT25K_P10_prop", 
+  "earn_P10_mean", 
+  "earn_P10_median", 
+  "earn_P10_SD", 
+  "earn_P10_mean_female", 
+  "earn_P10_mean_male", 
+  "gender_affil", 
+  "retention_FT", 
+  "retention_PT", 
+  "avg_net_cost", 
+  "cost_income1", 
+  "cost_income2", 
+  "cost_income3", 
+  "cost_income4", 
+  "cost_income5"
+)
+```
+
+
+### Reordering variables
+```{r}
+var_ordered <- c(
+  "id", 
+  "inst_name", 
+  "city", 
+  "state", 
+  "locale", 
+  "operation", 
+  "control", 
+  "degree", 
+  "religious_affil", 
+  "gender_affil", 
+  "num_UGDS", 
+  "UGDS_white", 
+  "UGDS_black", 
+  "UGDS_hispanic", 
+  "UGDS_asian", 
+  "UGDS_AIAN", 
+  "UGDS_NHPI", 
+  "UGDS_multi", 
+  "UGDS_foreign", 
+  "UGDS_NA", 
+  "avg_age_entry", 
+  "age_GT23_prop", 
+  "female_prop", 
+  "married_prop", 
+  "dependent_prop", 
+  "veteran_prop", 
+  "first_gen_prop", 
+  "SAT_CR_mid", 
+  "SAT_MT_mid", 
+  "retention_FT", 
+  "retention_PT", 
+  "fam_income_median", 
+  "fam_income_mean", 
+  "avg_net_cost", 
+  "cost_income1", 
+  "cost_income2", 
+  "cost_income3", 
+  "cost_income4", 
+  "cost_income5", 
+  "Pell_prop", 
+  "Pell_ever_prop", 
+  "fed_loan_prop", 
+  "fed_loan_ever_prop", 
+  "grad_debt_median", 
+  "GT25K_P10_prop", 
+  "earn_P10_median", 
+  "earn_P10_mean", 
+  "earn_P10_SD", 
+  "earn_P10_mean_female", 
+  "earn_P10_mean_male"
+)
+
+scorecard <- scorecard[var_ordered]
+```
+
+
+### Saving the result
+```{r}
+write.csv(scorecard, file = "scorecard_clean.csv", row.names = FALSE)
+```
+

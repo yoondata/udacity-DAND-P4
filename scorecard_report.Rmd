@@ -1,0 +1,289 @@
+**Exploring Potential Predictors of Postgraduate Financial Success**
+=====================================================================
+*Sangyoon Park*
+---------------------------------------------------------------------
+
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+library("knitr")
+options(width = 120, dplyr.width = Inf)
+opts_chunk$set(fig.align = "center", echo = FALSE, cache = FALSE, warning = FALSE, message = FALSE)
+read_chunk("scorecard_analysis.R")
+```
+
+```{r prelim}
+```
+
+```{r functions}
+```
+
+
+
+# I. Introduction
+
+Attending a college is a big investment both for the individual and his/her family: it involves the opportunity cost of working to be paid as well as the actual cost of attendance (i.e. tuition, etc.). Naturally, any person (or family) interested in college education considers various factors including academic prestige, location, and the cost of attendance. Though individuals may and do differ in these considered factors and their relative weights, one common influential factor for deciding which college to attend (or whether to attend a college at all) is the degree of postgraduate financial success. Simply put, many people seem to care the question: Will getting education here raise my future pay --- if so, how much? The question can be rephrased as the following: What institution-level characteristics are significant indicators of postgraduate financial success? Here, I would like to probe this question using the College Scoreboard Data from the U.S. Department of Education.
+
+### Data
+
+The [College Scoreboard Data](https://collegescorecard.ed.gov/data/) is a rich set of data containing educational, administrative, and financial information of all degree-granting institutions in America over the past two decades. The original data are saved in CSV files, with each file containing data for each year. Each file is quite large (~100 MB) containing thousands of rows and columns, so accessing data in this form is not practical. Kaggle kindly pre-processed and converted the data into [more digestible formats](https://www.kaggle.com/kaggle/college-scorecard) including SQLite database.
+
+For the current analysis, I have decided to use 2 smaller CSV files (`Most+Recent+Cohorts+(Scorecard+Elements).csv` and `Most+Recent+Cohorts+(Treasury+Elements).csv`) separately prepared by the U.S. Department of Education to include selective fields (i.e. variables) from the most recent year (2014-2015). I have merged these files, selected and renamed variables of interest, cleaned/pre-processed their values (see `scorecard_clean.Rmd` for more detailed processes).
+
+The resulting data set (`scorecard_clean.csv`) contains 50 variables, whose information is documented in `scorecard_codebook.xlsx`.
+
+
+
+# II. Analysis
+
+First, let's see the available variables and their values (`region` had been created based on `state`; other new variables will be created and used in a similar way).
+
+```{r}
+# Take a look at data
+names(scorecard)
+glimpse(scorecard)
+```
+
+We see that there are two different measures of postgraduate financial success: `earn_P10_mean` and `earn_P10_median`. Let's take a closer look at them to see which one will be a more appropriate measure to use for our analysis.
+
+
+## 1. Measures of Postgraduate Financial Success
+
+### Postgraduate Earnings: Mean vs. Median
+```{r PGE_stat}
+```
+The plots show that the mean postgraduate earnings tend to be higher than the median postgraduate earnings. This is not much surprising since income distributions normally tend to be positively skewed, and the mean is necessarily greater than the median in any positively skewed distribution. However, it should be noted that the divergence in the current case is not large, and we can use the two statistics interchangeably as an indicator of postgraduate financial success. As the median is more reasonable measure of central tendency in a positively skewed distribution, I will employ the median postgraduate earnings for the subsequent analysis. However, there will be some cases where the use of the mean postgraduate earnings is unavoidable (that is, the mean is the only available statistic). In these cases, I will employ the mean instead of the median, and our exploration at this point ensures that such practice is not unreasonable.
+
+Some words are in order regarding the distribution. Both the mean and the median postgraduate earnings display highly positively skewed distributions, indicating existence of a few "outperformers". This is very similar to what we often observe in individual (or household) income distribution. The "divide" between the common and the extraordinary seems to lie around $60,000. For most institutions, the median postgraduate earnings are less than $40,000, with the "peak" (i.e. mode) being around $30,000.
+
+Now, let's turn our attention to some "outperformers" whose median postgraduate earnings are greater than $100,000 to see what is unique about them. This may help us to identify potential indicators of postgraduate financial success.
+
+### Postgraduate Earnings: Outliers
+```{r outliers}
+```
+Several things grab our attention:
+
+- First, these "outperforming" institutions are mostly private nonprofit.
+- They also tend to be graduate-level institutions --- even institutions classified as primarily undergraduate (`bachelor`) here are renowned for their graduate programs.
+- Though not as apparent as previous observations, many of these institutions are located in `Northeast`.
+- Finally, institution names tell us that many of them are specialized in medicine.
+
+In sum, these observations make us suspect that institutional control type, primary degree type, regional location, and specialization in medicine can be potential indicators of postgraduate financial success.
+
+Let's examine this conjecture based on all institutions in the data set.
+
+
+## 2. Administrative Characteristics
+
+### Postgraduate Earnings by Control Type
+```{r PGE_control}
+```
+As expected, the median postgraduate earnings tend to be higher for private nonprofit institutions, followed by public and private for-profit institutions in turn. For better display, the histogram and frequency polygon have been zoomed in to show institutions whose median postgraduate earnings are less than $100,000.
+
+### Postgraduate Earnings by Degree Type
+```{r PGE_degree}
+```
+Clearly, institutions whose primary degree level is higher tend to have higher postgraduate earnings. However, we see a wider interquartile range for the `graduate` subgroup, which suggests that these institutions vary more in their levels of postgraduate financial success.
+
+Again, note that the histogram and frequency polygon have been zoomed in to show institutions whose median postgraduate earnings are less than $100,000 --- which should explain the unusual location of the median (blue bar in the histogram) in the `graduate` subgroup.
+
+### Postgraduate Earnings by Region
+```{r PGE_region}
+```
+As expected, regional variation of postgraduate earnings is not as pronounced as variation by control or degree type. Even though it is possible to identify some pattern (that the median postgraduate earnings tend to be higher for institutions in `Northeast` region, followed by institutions in `Midwest`, `West`, `South`, and `Noncontiguous` regions in turn), its small extent suggests that it can be due to chance. In other words, the pattern we identify from this data may not exist in other data. Yet, institutions in `Noncontiguous` region tend to have noticeably lower postgraduate earnings than institutions in other regions, which may more closely reflect reality.
+
+At this point, it is worth thinking about relationships among these three variables. Is it possible that the pattern we see in one variable is primarily due to its relation to another variable? For instance, is it possible that private nonprofit institutions tend to have higher postgraduate earnings *because* this educational sector has more higher-level (i.e. `graduate` and `bachelor`) institutions? This seems quite plausible since differing financial return for different educational levels is a well-known phenomenon and makes an intuitive sense. Variation by region and institutional control type, on the other hand, are not as intuitively appealing.
+
+Let's explore this possibility by examining distribution of degree types in `control` and `region`.
+
+### Distribution of Degree Types by Region and Control Type
+```{r distribution_degree}
+```
+Our suspicion turns out to be valid for control type: Most institutions in the private nonprofit sector primarily grant high-level degrees (i.e. `graduate` and `bachelor`) while those in the private for-private sector are mostly low-level degree granting institutions (i.e. `certificate` and `associate`).
+
+The similar pattern seems to exist in the regional distribution, where `Northeast` region has the greatest proportion of high-level degree granting institutions. However, this logic of degree level ratio does not hold quite well for the other regions. In particular, `Noncontiguous` region stands out as it shows a relatively greater proportion of high-level degree granting institutions (recall that institutions in this region tend to have noticeably lower postgraduate earnings).
+
+These observations then suggest that primary degree type largely explains variation of postgraduate financial success across control types, but not so much across regions.
+
+To further assess our conjecture, let's now examine variations by region and control type while adjusting for primary degree type.
+
+### Postgraduate Earnings by Control Type, Adjusting for Degree Type
+```{r PGE_control_adjDegree}
+```
+We see that the previously observed pattern (`private_nonprofit` > `pubic` > `private_for-profit`) largely disappears after adjusting for degree type.
+
+### Postgraduate Earnings by Region, Adjusting for Degree Type
+```{r PGE_region_adjDegree}
+```
+Again, we see that the previously observed regional pattern (`Northeast` > `Midwest` > `West` > `South` > `Noncontiguous`) breaks after adjusting for degree type. However, this does not smoothly translate into a confound effect as the formerly observed "pattern" is very weak and is hence dubious as to its validity. In other words, the reason why we see the breakdown of the formerly observed "pattern" is because this "pattern" itself was due to chance.
+
+Yet, two things are noteworthy in this case. First, though the order is a bit different from the previously observed one, there still seems to exist some pattern at least across `certificate`, `associate`, and `bachelor` subgroups (see the bar plot which compares the regional median postgraduate earnings across primary degree types). Second, noticeably lower postgraduate earnings for institutions in `Noncontiguous` region persist even after adjusting for degree type. In light of these considerations, we should probably not disregard region as a completely irrelevant factor for postgraduate financial success.
+
+Now, let's reverse the "roles" and examine variations by primary degree type while adjusting for region and control type.
+
+### Postgraduate Earnings by Degree Type, Adjusting for Control Type
+```{r PGE_degree_adjControl}
+```
+We see that the previously observed pattern (`graduate` > `bachelor` > `associate` > `certificate`) largely persists across different control types. An exception is found in `private_for-profit` sector, where postgraduate earnings of `graduate` institutions are considerably less. This can be seen as an effect of interaction between control and degree types.
+
+### Postgraduate Earnings by Degree Type, Adjusting for Region
+```{r PGE_degree_adjRegion}
+```
+We get the parallel observations: the previously observed pattern (`graduate` > `bachelor` > `associate` > `certificate`) largely persists across different subgroups (regions), with an exception (`Noncontiguous`) where postgraduate earnings of `graduate` institutions are considerably less. Again, this "exception" can be seen as the effect of interaction between region and primary degree type. Relatively greater variation in postgraduate earnings of `graduate` institutions can be seen as another interaction effect.
+
+To summarize, our investigation so far suggests that an institution's primary degree type is an important indicator of its overall level of postgraduate financial success. We have also seen that this factor can explains a large portion of correlation between postgraduate financial success and other variables. In light of this, we will pay particular attention to primary degree type as a potential confound when examining other variables relevant to postgraduate financial success.
+
+Now, let's examine our suspicion that specialization in medicine may be associated with higher postgraduate earnings. Medical professions have been associated with much prestige, so this conjecture does not sound much surprising.
+
+### Distribution of Postgraduate Earnings by Specialization in Medicine
+```{r PGE_medical}
+```
+Quite surprisingly, institutions specializing in medicine do not seem as better off as we would expect: there are some positive outliers (which must be the "outperforming" institutions we had examined earlier), but the rest of the distribution is quite similar to that of non-medical institutions. Then, a question arises as to what divides the "outperforming" institutions and the others *within* medical institutions. Could degree type be an answer?
+
+### Distribution of Postgraduate Earnings by Specialization in Medicine, Adjusting for Degree Type
+```{r PGE_medical_adjDegree}
+```
+Indeed, degree type turns out to be the dividing factor: we see the discrepancy between medical and non-medical institutions increases as the primary degree level gets higher. This makes sense as the prestige associated with the medical profession mostly derives from medical "doctors" rather than from other medical staff (e.g., nurses). In sum, there seems to be an association between specialization in medicine and postgraduate financial success but this association is mediated by primary degree type.
+
+
+## 3. Student Demographics
+
+### Male vs. Female Postgraduate Earnings
+```{r PGE_gender}
+```
+The first plot compares female vs. male postgraduate earnings in each institution (identity line in red); and the second plot shows the distribution of gender differences in postgraduate earnings. Note that the statistic used here is the *mean*, not the median, as the latter is not available gender-specifically. Our earlier discussion allows us to reply on the mean as a comparable measure of postgraduate financial success.
+
+In most institutions, male postgraduate earnings are higher than female postgraduate earnings. Furthermore, the difference between male and female postgraduate earnings tend to be much bigger in institutions where male postgraduate earnings surpass female postgraduate earnings than in institutions where female postgraduate earnings surpass male postgraduate earnings.
+
+We can further examine whether this gender difference in postgraduate earnings is statistically significant. Since we have information on the mean male vs. female postgraduate earnings for each institution (`earn_P10_mean_male` and `earn_P10_mean_female`, respectively), we can employ the paired t-test to see if their difference is statistically significant. Even though the distribution of institution-level gender difference in postgraduate earnings is highly skewed (see below), which violates the normality assumption of a t-test, our sample size (n > 4000) seems large enough to compensate for this violation and hence to allow us to conduct a t-test.
+
+```{r PGE_gender_ttest}
+```
+The result shows a very small p-value, indicating it is very unlikely that the *true* institution-level gender difference in the median postgraduate earnings is zero. In other words, there really is institution-level gender difference in postgraduate earnings. We can be 95% confident that this *true* difference between male and female postgraduate earnings is between $10022 and $10452.
+
+These observations strongly suggest that being a male is associated with higher postgraduate earnings. Which leads us to the following conjecture: Do institutions with more male students have higher postgraduate earnings?
+
+### Postgraduate Earnings vs. Male Proportion
+```{r PGE_male}
+```
+We can make several observations:
+
+- Most observations are located on the left side of the plot, indicating female students are the majority in most institutions.
+- The main cluster of observations shows an upward trend, suggesting a positive correlation between an institution's median postgraduate earnings and proportion of male students.
+- There are several potential outliers. Outliers could be expected as the distribution of the median postgraduate earnings is highly positively skewed. They do not seem to much affect our interpretation of a positive correlation as 1) they also show an upward trend and 2) outliers usually do not much change the slope of a regression line.
+- There are several potential high leverage points. These include institutions whose male proportion is greater than 0.75. High leverage points have considerable influence on the slope of a regression line. In this case, we see many of them have relatively low median postgraduate earnings, which will counter the upward trend that the majority of observations show.
+
+In sum, there seems to be an overall positive correlation between an institution's proportion of male students and median postgraduate earnings, though some institutions do not fit into this pattern. In other words, with other things being equal, we can expect an institution with a higher proportion of male students to have higher median postgraduate earnings. But is this true?
+
+Let's recall that our previous investigation has identified an institution's primary degree type as a strong indicator of its postgraduate earnings. We have also seen that this factor underlies and hence explains other relationships involving postgraduate earnings. Could it be that it also underlies (hence explains) the positive correlation between the proportion of male students and the median postgraduate earnings?
+
+```{r PGE_male_degree}
+```
+Our suspicion seems quite valid: higher level institutions tend to be located higher on *both* y- and x-axis, suggesting the upward trend between the two variables (`earn_P10_median` and `male_prop`) is largely due to their respective correlation with primary degree type (`degree`).
+
+```{r PGE_male_degree_zoomed}
+```
+A closer look at the main cluster (`earn_P10_median` < $75,000) better reveals linearity based on the primary degree type, which further supports our earlier observation. The dot plot below makes more explicit the correlation between primary degree type and proportion of male students.
+
+```{r male_degree}
+```
+Naturally, our next step is to examine the relationship (between `earn_P10_median` and `male_prop`) after adjusting for the potential confound (i.e. `degree`).
+
+### Postgraduate Earnings vs. Male Proportion, Adjusting for Degree Type
+```{r PGE_male_adjDegree}
+```
+We can see that the correlation between the proportion of male students and the median postgraduate earnings becomes much weaker (`certificate` and `associate`) and even nonexistent (`bachelor` and `graduate`) after adjusting for degree type. Hence, we may tentatively conclude that gender ratio is not an important indicator of an institution's postgraduate success.
+
+We now move to another important demographic factor, race. Is there a relationship between an institution's racial composition and its median postgraduate earnings?
+
+### Race and Postgraduate Earnings
+```{r PGE_race}
+```
+The result indicates no association between an institution's racial composition and its level of postgraduate financial success. Note that the plot was created based on only undergraduate institutions (`bachelor`) due to availability of relevant information (i.e. racial composition). Degree type has hence been already adjusted, so our conclusion of no association becomes stronger.
+
+Nonetheless, we can make some observations from the plot. First, white students are the majority at most undergraduate institutions (which is not much surprising; sort of a sanity check). Second, there exist some undergraduate institutions where black or Hispanic students form the majority (which should include historically black colleges).
+
+
+## 4. Student Finance
+
+We now examine how student finance relates to an institution's postgraduate earnings, starting with the median family income. Do institutions with more affluent students have higher postgraduate earnings?
+
+### Postgraduate Earnings vs. Family Income
+```{r PGE_famIncm}
+```
+The first look seems to suggest a positive correlation. It is noteworthy, however, that there are several institutions that go against this trend, with the very low median family income but the very high postgraduate earnings. We also note that there are some institutions with the zero median family income, which does not make sense and is hence probably the result of data entry error.
+
+As before, we take a skeptical stance and examine the relationship after adjusting for the potential confound, `degree`.
+
+```{r PGE_famIncm_adjDegree}
+```
+We see that the positive correlation remains in `certificate`, `associate`, and `bachelor`, but not in `graduate` institutions. Considering that the `graduate` subgroup contains relatively few data points, we may say there is some positive correlation between an institution's overall family income level and its postgraduate earnings. That is, institutions with more affluent students seem to have higher postgraduate earnings. Yet, the strength of the correlation is quite weak, so its *practical* significance can be arguable.
+
+Interestingly, the `graduate` subgroup includes most of the unusual institutions with the very low median family income but the very high postgraduate earnings. This suggests that the majority of students in `graduate` institutions come from poor families but end up in earning a lot. Future analysis can probe why this dramatic transformation is unique to the `graduate` subgroup.
+
+Next, we examine the relationship between cost of attendance and postgraduate earnings.
+
+### Postgraduate Earnings vs. Cost of Attendance
+```{r PGE_cost}
+```
+We observe some positive correlation. However, we also see some sort of subgroupings within the main cluster (indicated by different densities), which suggest the possibility of a confound.
+
+```{r PGE_cost_degree}
+```
+We indeed see that the main cluster is compartmentalized by primary degree type. Let's adjust for primary degree type.
+
+```{r PGE_cost_adjDegree}
+```
+The result indicates no particular relationship between the two variables. Hence, cost of attendance is not an important indicator of an institution's postgraduate earnings.
+
+An anomaly is worth mentioning: the plots indicate that there are some institutions whose cost of attendance (`avg_net_cost`) is less than zero. To get some information about these institutions:
+
+```{r PGE_cost_anomaly}
+```
+Cost of attendance being less than zero does not make sense, so these values are likely to be data entry errors. Yet, it is also possible that these negative values actually bear meanings based on initial data coding policy.
+
+Finally, we examine how student debt relates to postgraduate earnings.
+
+### Postgraduate Earnings vs. Student Debt
+```{r PGE_debt}
+```
+It is hard to identify a meaningful pattern in this bivariate relationship. We note that the data points form two distinct clusters.
+
+```{r PGE_debt_degree}
+```
+We see that each cluster corresponds to a different degree type. Let's examine the relationship after adjusting for primary degree type.
+
+```{r PGE_debt_adjDegree}
+```
+The result indicates no particular relationship between the two variables. Hence, student debt is not an important indicator of an institution's postgraduate earnings.
+
+
+
+# III. Conclusion
+
+## 1. Final Plots and Summary
+
+### Plot One
+```{r finalPlot1}
+```
+Institutions whose primary degree level is higher tend to have greater postgraduate financial return. It is noteworthy that graduate institutions vary more in their levels of postgraduate financial return.
+
+### Plot Two
+```{r finalPlot2}
+```
+Initially, there seems to be a meaningful relationship between an institution's control type and postgraduate financial return --- namely, that postgraduate financial return tends to be greatest for private nonprofit institutions, followed by public and private for-profit institutions in turn. However, this "pattern" largely disappears once primary degree type is adjusted for.
+
+### Plot Three
+```{r finalPlot3}
+```
+There seems to be a positive correlation between an institution's male proportion and postgraduate financial return. However, we see this correlation becoming considerably weaker once primary degree type is adjusted for.
+
+
+## 2. Reflection
+
+This investigation started with the goal of identifying institution-level indicators of postgraduate financial success in higher education. Analysis results suggest that an institution's primary degree type/level is a prominent indicator of its postgraduate financial success. In other words, graduates of a higher level educational institution tend to earn more. This is not a much surprising finding as our common experience as well as scholarly research indicate association between a more advanced degree and a greater income. Yet, the current analysis has also revealed that this factor (primary degree type) mediates many other relationships the postgraduate financial success has, such that, when controlled for it (primary degree type), previously observed correlations become much weaker or even disappear.
+
+It needs to be noted that the current analysis and its approach face a major theoretical issue: many characteristics that are collected and examined on the institution level are in fact aggregations of individual-level traits. Therefore, findings pertaining to such characteristics can be in fact findings about the corresponding individual-level traits. For instance, let us assume that we have found positive correlation between an institution's average SAT or GRE score and postgraduate financial return --- even after adjusting for primary degree type. It is then very likely that this correlation is simply a collective-level manifestation of positive correlation between an *individual student's* SAT/GRE score and *his/her* postgraduate financial success. Hence, additional measures need to be taken to determine whether there still remains something meaningful in the institution-level correlation after accounting for the individual-level correlation. Of course, the surest way for this would be to compare individual students with nearly equal characteristics attending different institutions that also have nearly equal characteristics with one another except in the average SAT/GRE score. If there is found a consistent differentiation among these individual students with respect to postgraduate financial success, then we may conclude that the institution-level correlation captures more than a sum of individual-level correlations. Specifically, we may say that a high-achieving environment has its own positive correlation with postgraduate financial success; or, alternatively, that it *boosts* the positive correlation between an individual student's SAT/GRE score and his/her postgraduate financial success (which would be referring to an interaction effect).
+
+With this theoretical intricacy in mind, future analysis can examine other variables that could not be covered by the current analysis. One good starting point will be variables relating to the fields of study (i.e. major or concentration), as the current analysis has shown that health-related education is positively correlated with postgraduate financial success. Future analysis can hence probe whether such correlations exist for other particular fields of study such as engineering and law.
+
