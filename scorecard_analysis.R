@@ -160,38 +160,6 @@ scatter_plot <- function(scorecard_data, var_cont_y, var_cont_x, var_cat, view_r
   return(plot)
 }
 
-# Function that fits simple linear models and outputs brief summary statistics
-brief_slr <- function(data, var_outcome, vec_predictors) {
-  
-  # Initiate vectors to store info
-  vec_slope <- vector()
-  vec_SE <- vector()
-  vec_t <- vector()
-  vec_sig <- vector()
-  vec_adjr2 <- vector()
-  
-  # Fit linear models and extract info
-  for(predictor in vec_predictors) {
-    lm_tmp <- lm(eval(parse(text = var_outcome)) ~ eval(parse(text = predictor)), data = data, na.action = "na.omit")
-    lm_tmp_summary <- summary(lm_tmp)
-    vec_slope <- append(vec_slope, lm_tmp_summary$coefficients[2, 1])
-    vec_SE <- append(vec_SE, lm_tmp_summary$coefficients[2, 2])
-    vec_t <- append(vec_t, lm_tmp_summary$coefficients[2, 3])
-    vec_sig <- append(vec_sig, lm_tmp_summary$coefficients[2, 4])
-    vec_adjr2 <- append(vec_adjr2, lm_tmp_summary$adj.r.squared)
-  }
-  
-  # Arrange and return output
-  output <- data.frame(slr_outcome = rep(var_outcome, length(vec_predictors)),
-                       slr_predictor = vec_predictors,
-                       slope_estimate = vec_slope,
-                       std_error = vec_SE,
-                       t_value = vec_t,
-                       two_tail_sig = vec_sig,
-                       adj_r2 = vec_adjr2)
-  return(output)
-}
-
 
 
 ## @knitr PGE_stat
