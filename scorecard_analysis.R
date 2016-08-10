@@ -160,6 +160,33 @@ scatter_plot <- function(scorecard_data, var_cont_y, var_cont_x, var_cat, view_r
   return(plot)
 }
 
+univariate_cont <- function(scorecard_data, var_cont, binwidth = 5000) {
+  
+  # Plot box plot
+  p1 <- ggplot(scorecard_data %>%
+                 filter(!is.na(scorecard_data[[var_cont]])), 
+               aes(x = 1, y = eval(parse(text = var_cont)))) +
+    geom_boxplot(outlier.colour = "red", outlier.shape = 1) +
+    labs(y = var_cont) +
+    base_theme +
+    theme(panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank())
+  
+  # Plot histogram
+  p2 <- ggplot(scorecard_data %>%
+                 filter(!is.na(scorecard_data[[var_cont]])), 
+               aes(x = eval(parse(text = var_cont)))) +
+    geom_histogram(binwidth = binwidth, col = "white", fill = "lightsalmon") +
+    labs(x = var_cont) +
+    base_theme
+  
+  # Save plots as a list and return the result
+  plot_list <- list("box" = p1, "hist" = p2)
+  return(plot_list)
+}
+
 
 
 ## @knitr PGE_stat
@@ -368,6 +395,25 @@ hist_density_PGE(filter(scorecard, !is.na(degree)), "focus_medicine") +
 
 ## @knitr PGE_gender
 
+# Distribution of Postgraduate Earnings: Male vs. Female - Box Plot
+ggplot(scorecard %>%
+         filter(!is.na(earn_P10_mean_male) & !is.na(earn_P10_mean_female)) %>%
+         gather(earn_P10_mean_gender, earn_P10_mean_amount, earn_P10_mean_male, earn_P10_mean_female), 
+       aes(x = earn_P10_mean_gender, y = earn_P10_mean_amount)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 1) +
+  base_theme +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+
+# Distribution of Postgraduate Earnings: Male vs. Female - Frequency Polygon
+ggplot(scorecard %>%
+         filter(!is.na(earn_P10_mean_male) & !is.na(earn_P10_mean_female)) %>%
+         gather(earn_P10_mean_gender, earn_P10_mean_amount, earn_P10_mean_male, earn_P10_mean_female), 
+       aes(x = earn_P10_mean_amount, col = earn_P10_mean_gender)) +
+  geom_freqpoly(binwidth = 5000) +
+  scale_x_continuous(breaks = seq(0, 250000, 50000)) +
+  base_theme
+
 # Male vs. Female Postgraduate Earnings
 ggplot(scorecard %>%
          filter(!is.na(earn_P10_mean_male) & !is.na(earn_P10_mean_female)), 
@@ -375,18 +421,6 @@ ggplot(scorecard %>%
   geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
   geom_abline(slope = 1, colour = "red") +
   base_theme
-
-# Gender Difference in Postgraduate Earnings
-ggplot(scorecard %>%
-         filter(!is.na(earn_P10_mean_male) & !is.na(earn_P10_mean_female) & 
-                earn_P10_mean_male != earn_P10_mean_female) %>%
-         mutate(PGE_gender_diff = earn_P10_mean_female - earn_P10_mean_male, 
-                PGE_greater_gender = ifelse(PGE_gender_diff > 0, "female", "male")) %>%
-         mutate(PGE_gender_diff = abs(PGE_gender_diff)), 
-       aes(x = PGE_gender_diff, fill = PGE_greater_gender)) +
-  geom_histogram(binwidth = 500, position = "fill") +
-  base_theme +
-  theme(panel.grid = element_blank())
 
 
 
@@ -470,6 +504,13 @@ scatter_plot(scorecard %>%
 
 
 
+## @knitr famIncm
+
+# Distribution of Average Family Income
+univariate_cont(scorecard, "fam_income_median", binwidth = 2500)
+
+
+
 ## @knitr PGE_famIncm
 
 # Postgraduate Earnings vs. Family Income
@@ -487,6 +528,13 @@ scatter_plot(scorecard %>%
                filter(!is.na(degree)), 
              "earn_P10_median", "fam_income_median") +
   facet_wrap(~ degree, scales = "free")
+
+
+
+## @knitr cost
+
+# Distribution of Cost of Attendance
+univariate_cont(scorecard, "avg_net_cost", binwidth = 2500)
 
 
 
@@ -521,6 +569,13 @@ scorecard %>%
   filter(avg_net_cost < 0) %>%
   select(inst_name, control, degree, earn_P10_median, avg_net_cost) %>%
   arrange(desc(earn_P10_median))
+
+
+
+## @knitr debt
+
+# Distribution of Student Debt
+univariate_cont(scorecard, "grad_debt_median", binwidth = 2500)
 
 
 

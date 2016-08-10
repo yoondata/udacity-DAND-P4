@@ -150,7 +150,7 @@ To summarize, our investigation so far suggests that an institution's primary de
 
 Now, let's examine our suspicion that specialization in medicine may be associated with higher postgraduate earnings. Medical professions have been associated with much prestige, so this conjecture does not sound much surprising.
 
-### Distribution of Postgraduate Earnings by Specialization in Medicine
+### Specialization in Medicine and Postgraduate Earnings
 ```{r bar_medical}
 ```
 Quite expectedly, there are relatively few institutions that specialize in medicine. However, this is very likely to be an underestimation since we have identified medical institutions solely based on their names (e.g., "Medic", "Pharm", "Health"). For instance, the University of California, San Francisco (UCSF) has a primary focus in medical and health-related research even though its names does not indicate this.
@@ -227,7 +227,11 @@ Nonetheless, we can make some observations from the plot. First, white students 
 
 We now examine how student finance relates to an institution's postgraduate earnings, starting with the median family income. Do institutions with more affluent students have higher postgraduate earnings?
 
-### Postgraduate Earnings vs. Family Income
+### Family Income
+```{r famIncm}
+```
+We see that the distribution of average family income is positively skewed, but to a lesser extent than some of the previous distributions. We have some outliers but they are not as glaringly extreme as those we saw in the median postgraduate earnings.
+
 ```{r PGE_famIncm}
 ```
 The first look seems to suggest a positive correlation. It is noteworthy, however, that there are several institutions that go against this trend, with the very low median family income but the very high postgraduate earnings. We also note that there are some institutions with the zero median family income, which does not make sense and is hence probably the result of data entry error.
@@ -242,7 +246,11 @@ Interestingly, the `graduate` subgroup includes most of the unusual institutions
 
 Next, we examine the relationship between cost of attendance and postgraduate earnings.
 
-### Postgraduate Earnings vs. Cost of Attendance
+### Cost of Attendance
+```{r cost}
+```
+We observe a quite narrow interquartile range, which means that the average net cost of attendance is relatively similar among the middle 50% of the institutions. We can read the same trend from the histogram, whose "peak" is relatively blunt and wide.
+
 ```{r PGE_cost}
 ```
 We observe some positive correlation. However, we also see some sort of subgroupings within the main cluster (indicated by different densities), which suggest the possibility of a confound.
@@ -264,6 +272,10 @@ Cost of attendance being less than zero does not make sense, so these values are
 Finally, we examine how student debt relates to postgraduate earnings.
 
 ### Postgraduate Earnings vs. Student Debt
+```{r debt}
+```
+We note that the distribution of student debt across institutions is binomial and has very few outliers.
+
 ```{r PGE_debt}
 ```
 It is hard to identify a meaningful pattern in this bivariate relationship. We note that the data points form two distinct clusters.
