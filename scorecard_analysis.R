@@ -215,7 +215,7 @@ grad_earn_GT100K %>%
 
 # Distribution of Different Control Types
 ggplot(scorecard, aes(x = control)) +
-  geom_bar(fill = "lightgreen") +
+  geom_bar(col = "black", fill = "white") +
   base_theme +
   theme(panel.grid = element_blank())
 
@@ -238,7 +238,7 @@ hist_density_PGE(scorecard, "control", view_range = c(0, 100000))
 
 # Distribution of Primary Degree Types
 ggplot(scorecard, aes(x = degree)) +
-  geom_bar(fill = "lightgreen") +
+  geom_bar(col = "black", fill = "white") +
   base_theme +
   theme(panel.grid = element_blank())
 
@@ -261,7 +261,7 @@ hist_density_PGE(scorecard, "degree", view_range = c(0, 100000))
 
 # Regional Distribution
 ggplot(scorecard, aes(x = region)) +
-  geom_bar(fill = "lightgreen") +
+  geom_bar(col = "black", fill = "white") +
   base_theme +
   theme(panel.grid = element_blank())
 
@@ -344,7 +344,7 @@ scorecard <- scorecard %>%
 
 # Distribution of medical vs. non-medical institutions
 ggplot(scorecard, aes(x = focus_medicine)) +
-  geom_bar(fill = "lightgreen") +
+  geom_bar(col = "black", fill = "white") +
   base_theme +
   theme(panel.grid = element_blank())
 
