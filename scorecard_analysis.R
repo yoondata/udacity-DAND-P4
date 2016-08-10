@@ -117,7 +117,7 @@ bar_2cat_mdn_PGE <- function(scorecard_data, x_cat, fill_cat) {
                    summarise(mdn_PGE = median(earn_P10_median, na.rm = TRUE)), 
                  aes(x = eval(parse(text = x_cat)), y = mdn_PGE, 
                      fill = eval(parse(text = fill_cat)))) +
-    geom_bar(stat = "identity", position = "dodge", alpha = 4/5) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 1/2) +
     labs(x = x_cat, fill = fill_cat) +
     base_theme +
     theme(panel.grid.major.x = element_blank(),
@@ -497,7 +497,8 @@ scatter_plot(scorecard %>%
 ## @knitr famIncm
 
 # Distribution of Average Family Income
-univariate_cont(scorecard, "fam_income_median", binwidth = 2500)
+var_tmp <- univariate_cont(scorecard, "fam_income_median", binwidth = 2500)
+var_tmp[["box"]]; var_tmp[["hist"]]
 
 
 
@@ -524,7 +525,8 @@ scatter_plot(scorecard %>%
 ## @knitr cost
 
 # Distribution of Cost of Attendance
-univariate_cont(scorecard, "avg_net_cost", binwidth = 2500)
+var_tmp <- univariate_cont(scorecard, "avg_net_cost", binwidth = 2500)
+var_tmp[["box"]]; var_tmp[["hist"]]
 
 
 
@@ -566,7 +568,8 @@ scorecard %>%
 ## @knitr debt
 
 # Distribution of Student Debt
-univariate_cont(scorecard, "grad_debt_median", binwidth = 2500)
+var_tmp <- univariate_cont(scorecard, "grad_debt_median", binwidth = 2500)
+var_tmp[["box"]]; var_tmp[["hist"]]
 
 
 
