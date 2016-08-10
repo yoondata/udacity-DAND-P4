@@ -75,19 +75,34 @@ Let's examine this conjecture based on all institutions in the data set.
 
 ## 2. Administrative Characteristics
 
-### Postgraduate Earnings by Control Type
+### Control Type and Postgraduate Earnings
+
+We first examine the distribution of different control types.
+
+```{r bar_control}
+```
+We see that the majority of institutions are private for-profit. How does control type then relate to postgraduate financial success?
+
 ```{r PGE_control}
 ```
 As expected, the median postgraduate earnings tend to be higher for private nonprofit institutions, followed by public and private for-profit institutions in turn. For better display, the histogram and frequency polygon have been zoomed in to show institutions whose median postgraduate earnings are less than $100,000.
 
-### Postgraduate Earnings by Degree Type
+### Primary Degree Type and Postgraduate Earnings
+```{r bar_degree}
+```
+Certificate granting institutions form the greatest proportion, and there are relatively few graduate institutions. We disregard institutions whose primary degree type is unavailable (i.e. NA) for bivariate analysis below.
+
 ```{r PGE_degree}
 ```
 Clearly, institutions whose primary degree level is higher tend to have higher postgraduate earnings. However, we see a wider interquartile range for the `graduate` subgroup, which suggests that these institutions vary more in their levels of postgraduate financial success.
 
 Again, note that the histogram and frequency polygon have been zoomed in to show institutions whose median postgraduate earnings are less than $100,000 --- which should explain the unusual location of the median (blue bar in the histogram) in the `graduate` subgroup.
 
-### Postgraduate Earnings by Region
+### Region and Postgraduate Earnings
+```{r bar_region}
+```
+`South` has the greatest number of higher education institutions, which I personally find quite surprising. `Noncontiguous` region has the least number of higher education institutions, which should not be much surprising considering its small population.
+
 ```{r PGE_region}
 ```
 As expected, regional variation of postgraduate earnings is not as pronounced as variation by control or degree type. Even though it is possible to identify some pattern (that the median postgraduate earnings tend to be higher for institutions in `Northeast` region, followed by institutions in `Midwest`, `West`, `South`, and `Noncontiguous` regions in turn), its small extent suggests that it can be due to chance. In other words, the pattern we identify from this data may not exist in other data. Yet, institutions in `Noncontiguous` region tend to have noticeably lower postgraduate earnings than institutions in other regions, which may more closely reflect reality.
@@ -136,6 +151,10 @@ To summarize, our investigation so far suggests that an institution's primary de
 Now, let's examine our suspicion that specialization in medicine may be associated with higher postgraduate earnings. Medical professions have been associated with much prestige, so this conjecture does not sound much surprising.
 
 ### Distribution of Postgraduate Earnings by Specialization in Medicine
+```{r bar_medical}
+```
+Quite expectedly, there are relatively few institutions that specialize in medicine. However, this is very likely to be an underestimation since we have identified medical institutions solely based on their names (e.g., "Medic", "Pharm", "Health"). For instance, the University of California, San Francisco (UCSF) has a primary focus in medical and health-related research even though its names does not indicate this.
+
 ```{r PGE_medical}
 ```
 Quite surprisingly, institutions specializing in medicine do not seem as better off as we would expect: there are some positive outliers (which must be the "outperforming" institutions we had examined earlier), but the rest of the distribution is quite similar to that of non-medical institutions. Then, a question arises as to what divides the "outperforming" institutions and the others *within* medical institutions. Could degree type be an answer?

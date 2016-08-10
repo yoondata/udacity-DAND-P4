@@ -243,6 +243,16 @@ grad_earn_GT100K %>%
 
 
 
+## @knitr bar_control
+
+# Distribution of Different Control Types
+ggplot(scorecard, aes(x = control)) +
+  geom_bar(fill = "lightgreen") +
+  base_theme +
+  theme(panel.grid = element_blank())
+
+
+
 ## @knitr PGE_control
 
 # Distribution of Postgraduate Earnings by Control Type: Box Plot
@@ -256,6 +266,16 @@ hist_density_PGE(scorecard, "control", view_range = c(0, 100000))
 
 
 
+## @knitr bar_degree
+
+# Distribution of Primary Degree Types
+ggplot(scorecard, aes(x = degree)) +
+  geom_bar(fill = "lightgreen") +
+  base_theme +
+  theme(panel.grid = element_blank())
+
+
+
 ## @knitr PGE_degree
 
 # Distribution of Postgraduate Earnings by Degree Type: Box Plot
@@ -266,6 +286,16 @@ hist_facet_PGE(scorecard, "degree", view_range = c(0, 100000))
 
 # Distribution of Postgraduate Earnings by Degree Type: Frequency Polygon
 hist_density_PGE(scorecard, "degree", view_range = c(0, 100000))
+
+
+
+## @knitr bar_region
+
+# Regional Distribution
+ggplot(scorecard, aes(x = region)) +
+  geom_bar(fill = "lightgreen") +
+  base_theme +
+  theme(panel.grid = element_blank())
 
 
 
@@ -338,11 +368,21 @@ bar_2cat_mdn_PGE(scorecard, "region", "degree")
 
 
 
-## @knitr PGE_medical
+## @knitr bar_medical
 
 # Create a new variable for medical specialization based on institution names
 scorecard <- scorecard %>%
   mutate(focus_medicine = ifelse(grepl("Medic", inst_name) | grepl("Pharm", inst_name) | grepl("Health", inst_name), "yes", "no"))
+
+# Distribution of medical vs. non-medical institutions
+ggplot(scorecard, aes(x = focus_medicine)) +
+  geom_bar(fill = "lightgreen") +
+  base_theme +
+  theme(panel.grid = element_blank())
+
+
+
+## @knitr PGE_medical
 
 # Distribution of Postgraduate Earnings by Specialization in Medicine
 hist_density_PGE(scorecard, "focus_medicine") +
@@ -437,8 +477,7 @@ ggplot(scorecard %>%
        aes(x = male_prop, y = degree)) +
   geom_jitter(alpha = 1/5) +
   base_theme +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+  theme(panel.grid = element_blank())
 
 
 
