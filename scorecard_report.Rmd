@@ -75,11 +75,11 @@ Let's examine this conjecture based on all institutions in the data set.
 
 ## 2. Administrative Characteristics
 
-### Control Type and Postgraduate Earnings
+### Control Type
 
 We first examine the distribution of different control types.
 
-```{r bar_control}
+```{r control}
 ```
 We see that the majority of institutions are private for-profit. How does control type then relate to postgraduate financial success?
 
@@ -87,8 +87,8 @@ We see that the majority of institutions are private for-profit. How does contro
 ```
 As expected, the median postgraduate earnings tend to be higher for private nonprofit institutions, followed by public and private for-profit institutions in turn. For better display, the histogram and frequency polygon have been zoomed in to show institutions whose median postgraduate earnings are less than $100,000.
 
-### Primary Degree Type and Postgraduate Earnings
-```{r bar_degree}
+### Primary Degree Type
+```{r degree}
 ```
 Certificate granting institutions form the greatest proportion, and there are relatively few graduate institutions. We disregard institutions whose primary degree type is unavailable (i.e. NA) for bivariate analysis below.
 
@@ -98,8 +98,8 @@ Clearly, institutions whose primary degree level is higher tend to have higher p
 
 Again, note that the histogram and frequency polygon have been zoomed in to show institutions whose median postgraduate earnings are less than $100,000 --- which should explain the unusual location of the median (blue bar in the histogram) in the `graduate` subgroup.
 
-### Region and Postgraduate Earnings
-```{r bar_region}
+### Region
+```{r region}
 ```
 `South` has the greatest number of higher education institutions, which I personally find quite surprising. `Noncontiguous` region has the least number of higher education institutions, which should not be much surprising considering its small population.
 
@@ -150,8 +150,8 @@ To summarize, our investigation so far suggests that an institution's primary de
 
 Now, let's examine our suspicion that specialization in medicine may be associated with higher postgraduate earnings. Medical professions have been associated with much prestige, so this conjecture does not sound much surprising.
 
-### Specialization in Medicine and Postgraduate Earnings
-```{r bar_medical}
+### Specialization in Medicine
+```{r medical}
 ```
 Quite expectedly, there are relatively few institutions that specialize in medicine. However, this is very likely to be an underestimation since we have identified medical institutions solely based on their names (e.g., "Medic", "Pharm", "Health"). For instance, the University of California, San Francisco (UCSF) has a primary focus in medical and health-related research even though its names does not indicate this.
 
@@ -159,7 +159,7 @@ Quite expectedly, there are relatively few institutions that specialize in medic
 ```
 Quite surprisingly, institutions specializing in medicine do not seem as better off as we would expect: there are some positive outliers (which must be the "outperforming" institutions we had examined earlier), but the rest of the distribution is quite similar to that of non-medical institutions. Then, a question arises as to what divides the "outperforming" institutions and the others *within* medical institutions. Could degree type be an answer?
 
-### Distribution of Postgraduate Earnings by Specialization in Medicine, Adjusting for Degree Type
+### Postgraduate Earnings by Specialization in Medicine, Adjusting for Degree Type
 ```{r PGE_medical_adjDegree}
 ```
 Indeed, degree type turns out to be the dividing factor: we see the discrepancy between medical and non-medical institutions increases as the primary degree level gets higher. This makes sense as the prestige associated with the medical profession mostly derives from medical "doctors" rather than from other medical staff (e.g., nurses). In sum, there seems to be an association between specialization in medicine and postgraduate financial success but this association is mediated by primary degree type.

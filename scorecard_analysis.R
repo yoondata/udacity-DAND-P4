@@ -238,7 +238,7 @@ grad_earn_GT100K %>%
 
 
 
-## @knitr bar_control
+## @knitr control
 
 # Distribution of Different Control Types
 ggplot(scorecard, aes(x = control)) +
@@ -261,7 +261,7 @@ hist_density_PGE(scorecard, "control", view_range = c(0, 100000))
 
 
 
-## @knitr bar_degree
+## @knitr degree
 
 # Distribution of Primary Degree Types
 ggplot(scorecard, aes(x = degree)) +
@@ -284,7 +284,7 @@ hist_density_PGE(scorecard, "degree", view_range = c(0, 100000))
 
 
 
-## @knitr bar_region
+## @knitr region
 
 # Regional Distribution
 ggplot(scorecard, aes(x = region)) +
@@ -363,7 +363,7 @@ bar_2cat_mdn_PGE(scorecard, "region", "degree")
 
 
 
-## @knitr bar_medical
+## @knitr medical
 
 # Create a new variable for medical specialization based on institution names
 scorecard <- scorecard %>%
