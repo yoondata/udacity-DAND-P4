@@ -45,19 +45,29 @@ scorecard$region <- factor(scorecard$region, levels = names(lst_region))
 ## @knitr functions
 
 # Function that produces box plots of the median postgraduate earnings for different levels of a category
-box_PGE <- function(scorecard_data, cat_var, view_range = NULL) {
+box_PGE <- function(scorecard_data, var_cat_1, var_cat_2, view_range = NULL) {
   
-  plot <- ggplot(scorecard_data %>%
-                   filter(!is.na(earn_P10_median) & !is.na(scorecard_data[[cat_var]])), 
-                 aes(x = eval(parse(text = cat_var)), y = earn_P10_median)) +
-    geom_boxplot(outlier.colour = "red", outlier.shape = 1) +
-    coord_cartesian(ylim = view_range) +
-    labs(x = cat_var) +
-    base_theme +
-    theme(panel.grid.major.x = element_blank(),
-          panel.grid.minor.x = element_blank())
-  
-  return(plot)
+  if(missing(var_cat_2)) {
+    ggplot(scorecard_data %>%
+                     filter(!is.na(earn_P10_median) & !is.na(scorecard_data[[var_cat_1]])), 
+                   aes(x = eval(parse(text = var_cat_1)), y = earn_P10_median)) +
+      geom_boxplot(alpha = 1/2, outlier.colour = "red", outlier.shape = 1) +
+      coord_cartesian(ylim = view_range) +
+      labs(x = var_cat_1) +
+      base_theme +
+      theme(panel.grid.major.x = element_blank(),
+            panel.grid.minor.x = element_blank())
+  } else {
+    ggplot(scorecard_data %>%
+                     filter(!is.na(earn_P10_median) & !is.na(scorecard_data[[var_cat_1]]) & !is.na(scorecard_data[[var_cat_2]])), 
+                   aes(x = eval(parse(text = var_cat_1)), y = earn_P10_median, fill = eval(parse(text = var_cat_2)))) +
+      geom_boxplot(alpha = 1/2, outlier.colour = "red", outlier.shape = 1) +
+      coord_cartesian(ylim = view_range) +
+      labs(x = var_cat_1, fill = var_cat_2) +
+      base_theme +
+      theme(panel.grid.major.x = element_blank(),
+            panel.grid.minor.x = element_blank())
+  }
 }
 
 # Function that plots histograms of the median postgraduate earnings for different levels of a category
@@ -82,27 +92,12 @@ hist_facet_PGE <- function(scorecard_data, cat_var, view_range = NULL, binwidth 
   return(plot)
 }
 
-# Function that plots frequency polygons of the median postgraduate earnings for different levels of a category
-hist_density_PGE <- function(scorecard_data, cat_var, view_range = NULL, binwidth = 5000) {
-  
-  plot <- ggplot(scorecard_data %>%
-                   filter(!is.na(earn_P10_median) & !is.na(scorecard_data[[cat_var]])), 
-                 aes(x = earn_P10_median, col = eval(parse(text = cat_var)))) +
-    geom_freqpoly(aes(y = ..density..), binwidth = binwidth) +
-    coord_cartesian(xlim = view_range) +
-    labs(col = cat_var) +
-    base_theme +
-    theme(axis.text.y = element_blank())
-  
-  return(plot)
-}
-
 bar_2cat <- function(scorecard_data, x_cat, fill_cat, position_type = "stack") {
   
   plot <- ggplot(scorecard_data %>%
                    filter(!is.na(scorecard_data[[x_cat]]) & !is.na(scorecard_data[[fill_cat]])), 
                  aes(x = eval(parse(text = x_cat)), fill = eval(parse(text = fill_cat)))) +
-    geom_bar(position = position_type) +
+    geom_bar(position = position_type, alpha = 4/5) +
     labs(x = x_cat, fill = fill_cat) +
     base_theme +
     theme(panel.grid.major.x = element_blank(),
@@ -111,6 +106,7 @@ bar_2cat <- function(scorecard_data, x_cat, fill_cat, position_type = "stack") {
   return(plot)
 }
 
+# Make sure that the input categorical variable is set as a factor
 bar_2cat_mdn_PGE <- function(scorecard_data, x_cat, fill_cat) {
   
   plot <- ggplot(scorecard_data %>%
@@ -121,7 +117,7 @@ bar_2cat_mdn_PGE <- function(scorecard_data, x_cat, fill_cat) {
                    summarise(mdn_PGE = median(earn_P10_median, na.rm = TRUE)), 
                  aes(x = eval(parse(text = x_cat)), y = mdn_PGE, 
                      fill = eval(parse(text = fill_cat)))) +
-    geom_bar(stat = "identity", position = "dodge") +
+    geom_bar(stat = "identity", position = "dodge", alpha = 4/5) +
     labs(x = x_cat, fill = fill_cat) +
     base_theme +
     theme(panel.grid.major.x = element_blank(),
@@ -256,9 +252,6 @@ box_PGE(scorecard, "control")
 # Distribution of Postgraduate Earnings by Control Type: Histogram
 hist_facet_PGE(scorecard, "control", view_range = c(0, 100000))
 
-# Distribution of Postgraduate Earnings by Control Type: Frequency Polygon
-hist_density_PGE(scorecard, "control", view_range = c(0, 100000))
-
 
 
 ## @knitr degree
@@ -278,9 +271,6 @@ box_PGE(scorecard, "degree")
 
 # Distribution of Postgraduate Earnings by Degree Type: Histogram
 hist_facet_PGE(scorecard, "degree", view_range = c(0, 100000))
-
-# Distribution of Postgraduate Earnings by Degree Type: Frequency Polygon
-hist_density_PGE(scorecard, "degree", view_range = c(0, 100000))
 
 
 
@@ -302,19 +292,18 @@ box_PGE(scorecard, "region")
 # Distribution of Postgraduate Earnings by Region: Histogram
 hist_facet_PGE(scorecard, "region", view_range = c(0, 100000))
 
-# Distribution of Postgraduate Earnings by Region: Frequency Polygon
-hist_density_PGE(scorecard, "region", view_range = c(0, 100000))
-
 
 
 ## @knitr distribution_degree
 
 # Distribution of Degree Types by Control Type
 bar_2cat(filter(scorecard, !is.na(earn_P10_median)), "control", "degree", "fill") +
+  labs(y = "proportion") +
   theme(panel.grid = element_blank())
 
 # Distribution of Degree Types by Region
 bar_2cat(filter(scorecard, !is.na(earn_P10_median)), "region", "degree", "fill") +
+  labs(y = "proportion") +
   theme(panel.grid = element_blank())
 
 
@@ -322,8 +311,7 @@ bar_2cat(filter(scorecard, !is.na(earn_P10_median)), "region", "degree", "fill")
 ## @knitr PGE_control_adjDegree
 
 # Distribution of Postgraduate Earnings by Control Type, Adjusting for Degree Type
-hist_density_PGE(filter(scorecard, !is.na(degree)), "control", view_range = c(0, 100000)) +
-  facet_wrap(~ degree, ncol = 1)
+box_PGE(scorecard, "degree", "control")
 
 # Median Postgraduate Earnings by Control Type, Adjusting for Degree Type
 bar_2cat_mdn_PGE(scorecard, "degree", "control")
@@ -333,8 +321,7 @@ bar_2cat_mdn_PGE(scorecard, "degree", "control")
 ## @knitr PGE_region_adjDegree
 
 # Distribution of Postgraduate Earnings by Region, Adjusting for Degree Type
-hist_density_PGE(filter(scorecard, !is.na(degree)), "region", view_range = c(0, 100000)) +
-  facet_wrap(~ degree, scales = "free_y", ncol = 1)
+box_PGE(scorecard, "degree", "region")
 
 # Median Postgraduate Earnings by Region, Adjusting for Degree Type
 bar_2cat_mdn_PGE(scorecard, "degree", "region")
@@ -344,8 +331,7 @@ bar_2cat_mdn_PGE(scorecard, "degree", "region")
 ## @knitr PGE_degree_adjControl
 
 # Distribution of Postgraduate Earnings by Degree Type, Adjusting for Control Type
-hist_density_PGE(filter(scorecard, !is.na(control)), "degree", view_range = c(0, 100000)) +
-facet_wrap(~ control, ncol = 1)
+box_PGE(scorecard, "control", "degree")
 
 # Median Postgraduate Earnings by Degree Type, Adjusting for Control Type
 bar_2cat_mdn_PGE(scorecard, "control", "degree")
@@ -355,8 +341,7 @@ bar_2cat_mdn_PGE(scorecard, "control", "degree")
 ## @knitr PGE_degree_adjRegion
 
 # Distribution of Postgraduate Earnings by Degree Type, Adjusting for Region
-hist_density_PGE(filter(scorecard, !is.na(region)), "degree", view_range = c(0, 100000)) +
-  facet_wrap(~ region, scales = "free_y", ncol = 1)
+box_PGE(scorecard, "region", "degree")
 
 # Median Postgraduate Earnings by Degree Type, Adjusting for Region
 bar_2cat_mdn_PGE(scorecard, "region", "degree")
@@ -369,6 +354,9 @@ bar_2cat_mdn_PGE(scorecard, "region", "degree")
 scorecard <- scorecard %>%
   mutate(focus_medicine = ifelse(grepl("Medic", inst_name) | grepl("Pharm", inst_name) | grepl("Health", inst_name), "yes", "no"))
 
+# Make the variable a factor
+scorecard$focus_medicine <- factor(scorecard$focus_medicine, levels = c("no", "yes"))
+
 # Distribution of medical vs. non-medical institutions
 ggplot(scorecard, aes(x = focus_medicine)) +
   geom_bar(col = "black", fill = "white") +
@@ -379,17 +367,18 @@ ggplot(scorecard, aes(x = focus_medicine)) +
 
 ## @knitr PGE_medical
 
-# Distribution of Postgraduate Earnings by Specialization in Medicine
-hist_density_PGE(scorecard, "focus_medicine") +
-  geom_vline(xintercept = 100000, col = "blue", linetype = 2)
+# Distribution of Postgraduate Earnings by Specialization in Medicine: Box Plot
+box_PGE(scorecard, "focus_medicine")
+
+# Distribution of Postgraduate Earnings by Specialization in Medicine: Histogram
+hist_facet_PGE(scorecard, "focus_medicine", view_range = c(0, 100000))
 
 
 
 ## @knitr PGE_medical_adjDegree
 
 # Distribution of Postgraduate Earnings by Specialization in Medicine, Adjusting for Degree Type
-hist_density_PGE(filter(scorecard, !is.na(degree)), "focus_medicine") +
-  facet_wrap(~ degree, scales = "free_y", ncol = 1)
+box_PGE(scorecard, "degree", "focus_medicine")
 
 
 
@@ -489,6 +478,7 @@ ggplot(scorecard %>%
 scatter_plot(scorecard %>%
                filter(!is.na(degree)), 
              "earn_P10_median", "male_prop") +
+  geom_smooth(method = "lm") +
   facet_wrap(~ degree, scales = "free_y")
 
 
@@ -558,6 +548,7 @@ scatter_plot(scorecard, "earn_P10_median", "avg_net_cost", "degree")
 scatter_plot(scorecard %>%
                filter(!is.na(degree)), 
              "earn_P10_median", "avg_net_cost") +
+  geom_smooth(method = "lm") +
   facet_wrap(~ degree, scales = "free", nrow = 2)
 
 
@@ -599,48 +590,49 @@ scatter_plot(scorecard, "earn_P10_median", "grad_debt_median", "degree")
 scatter_plot(scorecard %>%
                filter(!is.na(degree)), 
              "earn_P10_median", "grad_debt_median") +
+  geom_smooth(method = "lm") +
   facet_wrap(~ degree, scales = "free")
 
 
 
 ## @knitr finalPlot1
 
-box_PGE(scorecard, "degree") +
-  labs(x = "Primary Degree Type", y = "Median Income, 10 Years After Graduation",
+box_PGE(scorecard, "degree", view_range = c(0, 150000)) +
+  labs(x = "Primary Degree Type", y = "Median Income, 10 Years After Graduation [USD]",
        title = "Postgraduate Financial Success by Institution's Primary Degree Type")
 
 
 
 ## @knitr finalPlot2
 
-hist_density_PGE(scorecard, "control", view_range = c(0, 100000)) +
-  labs(x = "Median Income, 10 Years After Graduation", y = "Proportion",
-       title = "Postgraduate Financial Success by Institution's Control Type") +
-  theme(axis.text.x = element_text(size = 8))
-
-hist_density_PGE(filter(scorecard, !is.na(degree)), "control", view_range = c(0, 100000)) +
-  facet_wrap(~ degree, ncol = 1) +
-  labs(x = "Median Income, 10 Years After Graduation", y = "Proportion",
-       title = "Adjusting for Primary Degree Type") +
-  theme(axis.text.x = element_text(size = 8),
-        strip.text = element_text(color = "dimgrey"))
+# hist_density_PGE(scorecard, "control", view_range = c(0, 100000)) +
+#   labs(x = "Median Income, 10 Years After Graduation", y = "Proportion",
+#        title = "Postgraduate Financial Success by Institution's Control Type") +
+#   theme(axis.text.x = element_text(size = 8))
+# 
+# hist_density_PGE(filter(scorecard, !is.na(degree)), "control", view_range = c(0, 100000)) +
+#   facet_wrap(~ degree, ncol = 1) +
+#   labs(x = "Median Income, 10 Years After Graduation", y = "Proportion",
+#        title = "Adjusting for Primary Degree Type") +
+#   theme(axis.text.x = element_text(size = 8),
+#         strip.text = element_text(color = "dimgrey"))
 
 
 
 ## @knitr finalPlot3
 
-scatter_plot(scorecard, "earn_P10_median", "male_prop") +
-  labs(x = "Male Proportion", y = "Median Income, 10 Years After Graduation",
-       title = "Postgraduate Earnings vs. Male Proportion")
-
-scatter_plot(scorecard %>%
-               filter(!is.na(degree)), 
-             "earn_P10_median", "male_prop") +
-  facet_wrap(~ degree, scales = "free_y") +
-  labs(x = "Male Proportion", y = "Median Income, 10 Years After Graduation",
-       title = "Adjusting for Primary Degree Type") +
-  theme(axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8),
-        strip.text = element_text(color = "dimgrey"))
+# scatter_plot(scorecard, "earn_P10_median", "male_prop") +
+#   labs(x = "Male Proportion", y = "Median Income, 10 Years After Graduation",
+#        title = "Postgraduate Earnings vs. Male Proportion")
+# 
+# scatter_plot(scorecard %>%
+#                filter(!is.na(degree)), 
+#              "earn_P10_median", "male_prop") +
+#   facet_wrap(~ degree, scales = "free_y") +
+#   labs(x = "Male Proportion", y = "Median Income, 10 Years After Graduation",
+#        title = "Adjusting for Primary Degree Type") +
+#   theme(axis.text.x = element_text(size = 8),
+#         axis.text.y = element_text(size = 8),
+#         strip.text = element_text(color = "dimgrey"))
 
 
