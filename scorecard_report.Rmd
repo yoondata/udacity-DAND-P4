@@ -170,7 +170,7 @@ Indeed, degree type turns out to be the dividing factor: we see the discrepancy 
 ### Male vs. Female Postgraduate Earnings
 ```{r PGE_gender}
 ```
-The first plot compares female vs. male postgraduate earnings in each institution (identity line in red); and the second plot shows the distribution of gender differences in postgraduate earnings. Note that the statistic used here is the *mean*, not the median, as the latter is not available gender-specifically. Our earlier discussion allows us to reply on the mean as a comparable measure of postgraduate financial success.
+Note that the statistic used here is the *mean*, not the median, as the latter is not available gender-specifically. Our earlier discussion allows us to reply on the mean as a comparable measure of postgraduate financial success. The red line in the last plot is an identity line.
 
 In most institutions, male postgraduate earnings are higher than female postgraduate earnings. Furthermore, the difference between male and female postgraduate earnings tend to be much bigger in institutions where male postgraduate earnings surpass female postgraduate earnings than in institutions where female postgraduate earnings surpass male postgraduate earnings.
 
@@ -261,7 +261,7 @@ We indeed see that the main cluster is compartmentalized by primary degree type.
 
 ```{r PGE_cost_adjDegree}
 ```
-The result indicates no particular relationship between the two variables. Hence, cost of attendance is not an important indicator of an institution's postgraduate earnings.
+We observe that the positive correlation persists after adjusting for primary degree type. In other words, graduates of more expensive institutions tend to earn more than their counterparts who attended more affordable schools. Again, the strength of the correlation is quite weak, so its *practical* significance can be arguable.
 
 An anomaly is worth mentioning: the plots indicate that there are some institutions whose cost of attendance (`avg_net_cost`) is less than zero. To get some information about these institutions:
 
@@ -297,17 +297,17 @@ The result indicates no particular relationship between the two variables. Hence
 ### Plot One
 ```{r finalPlot1}
 ```
-Institutions whose primary degree level is higher tend to have greater postgraduate financial return. It is noteworthy that graduate institutions vary more in their levels of postgraduate financial return.
+Data from higher education institutions in the U.S. in 2014 has been analyzed to identify potential indicators of postgraduate success. The plot shows distribution of institutions' median postgraduate earnings by primary degree type. The distribution (and its median value) moves up as primary degree level goes up, indicating that institutions whose primary degree level is higher tend to have greater postgraduate financial return. It is noteworthy that graduate institutions vary more in their levels of postgraduate financial return than institutions of lower degree types/levels. Note that the plot has been zoomed in for better display, so some outliers in graduate institutions are not shown.
 
 ### Plot Two
 ```{r finalPlot2}
 ```
-Initially, there seems to be a meaningful relationship between an institution's control type and postgraduate financial return --- namely, that postgraduate financial return tends to be greatest for private nonprofit institutions, followed by public and private for-profit institutions in turn. However, this "pattern" largely disappears once primary degree type is adjusted for.
+Data from higher education institutions in the U.S. in 2014 has been analyzed to identify potential indicators of postgraduate success. The plot shows distribution of institutions' median postgraduate earnings by whether the institution specializes in medical and/or health-related education. It shows increasing divergence between medical and non-medical institutions as primary degree level goes up. From this, we can see that: 1) there is positive correlation between an institution's postgraduate financial success and its specialization in medicine; and 2) this correlation is mediated by the institution's primary degree type such that the correlation becomes stronger as the degree level goes up. Note that the plot has been zoomed in for better display, so some graduate institutions are not shown.
 
 ### Plot Three
 ```{r finalPlot3}
 ```
-There seems to be a positive correlation between an institution's male proportion and postgraduate financial return. However, we see this correlation becoming considerably weaker once primary degree type is adjusted for.
+Data from higher education institutions in the U.S. in 2014 has been analyzed to identify potential indicators of postgraduate success. The plot shows the relationship between an institution's median postgraduate earnings and its median student debt upon graduation. Initial look suggests positive correlation between the two variables. However, after adjusting for primary degree type, we see that the relationship between the two variables are not consistent. Hence, we can tentatively conclude that student debt is not a meaningful indicator of an institution's postgraduate earnings. Note that the plot has been zoomed in for better display, so some outliers are not shown.
 
 
 ## 2. Reflection
